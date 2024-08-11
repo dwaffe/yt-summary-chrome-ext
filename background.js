@@ -44,9 +44,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 });
 
-// Function to process the queue
 async function processQueue() {
-    await checkApiKey();
+    const apiKey = await getApiKey();
+    if (!apiKey) {
+        console.log("API key not set. Please set it in the extension options.");
+        chrome.runtime.openOptionsPage();
+        return;
+    }
+
     chrome.storage.local.get('queue', async (data) => {
         let queue = data.queue || [];
         if (queue.length > 0) {
@@ -55,16 +60,21 @@ async function processQueue() {
             
             try {
                 const transcript = await fetchTranscript(videoId);
-                console.log("Transcript obtained:", transcript.substring(0, 100) + "..."); // Log first 100 characters
+                console.log("Transcript obtained:", transcript.substring(0, 100) + "...");
+                
+                const summary = await sendToClaudeApi(transcript, apiKey);
+                console.log("Summary obtained:", summary);
 
+                await saveSummary(videoId, summary);
+                console.log("Summary saved for video:", videoId);
 
-                // Here you can add code to send the transcript to AI
             } catch (error) {
                 if (error.message.includes("Transcript is disabled") || error.message.includes("No transcripts are available")) {
                     console.log(`No transcript available for video ${videoId}. Consider using speech-to-text in the future.`);
-                    // Here you could add logic to flag this video for future speech-to-text processing
+                    await saveSummary(videoId, "No transcript available for this video.");
                 } else {
                     console.error("Error processing video:", videoId, error);
+                    await saveSummary(videoId, "Error occurred while processing this video.");
                 }
             }
 
@@ -78,6 +88,54 @@ async function processQueue() {
             });
         }
     });
+}
+
+async function saveSummary(videoId, summary) {
+    return new Promise((resolve) => {
+        chrome.storage.local.get('summaries', (data) => {
+            let summaries = data.summaries || {};
+            summaries[videoId] = {
+                summary: summary,
+                timestamp: new Date().toISOString()
+            };
+            chrome.storage.local.set({summaries: summaries}, resolve);
+        });
+    });
+}
+
+async function sendToClaudeApi(transcript, apiKey) {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+            model: "claude-3-5-sonnet-20240620",
+            max_tokens: 1000,
+            temperature: 0,
+            system: "Podsumuj fakty z transkrypcji video w języku polskim",
+            messages: [
+                {
+                    role: "user",
+                    content: [
+                        {
+                            type: "text",
+                            text: `video transcript: ${transcript}`
+                        }
+                    ]
+                }
+            ]
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.content[0].text;
 }
 
 // Function to fetch transcript
