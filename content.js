@@ -73,7 +73,7 @@ function observeDOMChanges() {
             if (mutation.type === 'childList') {
                 mutation.addedNodes.forEach((node) => {
                     if (node.nodeType === Node.ELEMENT_NODE) {
-                        const thumbnails = node.querySelectorAll('#thumbnail');
+                        const thumbnails = node.querySelectorAll('div#thumbnail');
                         thumbnails.forEach(addButtonToThumbnail);
                     }
                 });
