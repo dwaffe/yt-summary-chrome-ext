@@ -62,7 +62,7 @@ async function processQueue() {
                 const transcript = await fetchTranscript(videoId);
                 console.log("Transcript obtained:", transcript.substring(0, 100) + "...");
                 
-                const summary = await sendToClaudeApi(transcript, apiKey);
+                const summary = await sendToOpenRouterApi(transcript, apiKey);
                 console.log("Summary obtained:", summary);
 
                 await saveSummary(videoId, summary);
@@ -103,28 +103,23 @@ async function saveSummary(videoId, summary) {
     });
 }
 
-async function sendToClaudeApi(transcript, apiKey) {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+async function sendToOpenRouterApi(transcript, apiKey) {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01'
+            'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-            model: "claude-3-5-sonnet-20240620",
-            max_tokens: 1000,
-            temperature: 0,
-            system: "Podsumuj fakty z transkrypcji video w języku polskim",
+            model: "anthropic/claude-3-sonnet-20240229",
             messages: [
                 {
+                    role: "system",
+                    content: "Podsumuj fakty z transkrypcji video w języku polskim"
+                },
+                {
                     role: "user",
-                    content: [
-                        {
-                            type: "text",
-                            text: `video transcript: ${transcript}`
-                        }
-                    ]
+                    content: `video transcript: ${transcript}`
                 }
             ]
         })
@@ -135,7 +130,7 @@ async function sendToClaudeApi(transcript, apiKey) {
     }
 
     const data = await response.json();
-    return data.content[0].text;
+    return data.choices[0].message.content;
 }
 
 // Function to fetch transcript
@@ -207,15 +202,15 @@ function retrieveVideoId(videoId) {
 // Funkcja do ustawiania klucza API
 function setApiKey(apiKey) {
     return new Promise((resolve) => {
-        chrome.storage.local.set({ 'anthropicApiKey': apiKey }, resolve);
+        chrome.storage.local.set({ 'openRouterApiKey': apiKey }, resolve);
     });
 }
 
 // Funkcja do pobierania klucza API
 function getApiKey() {
     return new Promise((resolve) => {
-        chrome.storage.local.get('anthropicApiKey', (result) => {
-            resolve(result.anthropicApiKey);
+        chrome.storage.local.get('openRouterApiKey', (result) => {
+            resolve(result.openRouterApiKey);
         });
     });
 }

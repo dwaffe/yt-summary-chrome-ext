@@ -90,10 +90,61 @@ function addButtonsToExistingThumbnails() {
     thumbnails.forEach(addButtonToThumbnail);
 }
 
+// Funkcja do dodawania przycisku "Summarize" na stronie filmu
+function addSummarizeButtonToVideoPage() {
+    if (document.querySelector('#summarize-button')) return; // Jeśli przycisk już istnieje, nie dodawaj kolejnego
+
+    const actionsContainer = document.querySelector('#top-level-buttons-computed');
+    if (actionsContainer) {
+        const summarizeButton = document.createElement('button');
+        summarizeButton.id = 'summarize-button';
+        summarizeButton.className = 'yt-spec-button-shape-next yt-spec-button-shape-next--tonal yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m';
+        summarizeButton.style.marginRight = '8px';
+        summarizeButton.innerHTML = `
+            <div class="yt-spec-button-shape-next__button-text-content">
+                <span class="yt-core-attributed-string yt-core-attributed-string--white-space-no-wrap">Summarize</span>
+            </div>
+        `;
+
+        summarizeButton.addEventListener('click', function() {
+            const videoId = new URLSearchParams(window.location.search).get('v');
+            if (videoId) {
+                addToQueue(videoId);
+            }
+        });
+
+        // Wstaw przycisk przed pierwszym dzieckiem kontenera akcji
+        actionsContainer.insertBefore(summarizeButton, actionsContainer.firstChild);
+        console.log('Summarize button added successfully');
+    } else {
+        console.error('Actions container not found');
+    }
+}
+
+// Funkcja do sprawdzania, czy jesteśmy na stronie filmu i dodawania przycisku "Summarize"
+function checkAndAddSummarizeButton() {
+    if (window.location.pathname === '/watch') {
+        // Użyj MutationObserver, aby poczekać na załadowanie przycisku akcji
+        const observer = new MutationObserver((mutations, obs) => {
+            const actionsContainer = document.querySelector('#top-level-buttons-computed');
+            if (actionsContainer) {
+                addSummarizeButtonToVideoPage();
+                obs.disconnect(); // Przestań obserwować po dodaniu przycisku
+            }
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    }
+}
+
 // Inicjalizacja
 function init() {
     addButtonsToExistingThumbnails();
     observeDOMChanges();
+    checkAndAddSummarizeButton();
 }
 
 // Uruchom inicjalizację po załadowaniu strony
@@ -102,3 +153,13 @@ if (document.readyState === 'loading') {
 } else {
     init();
 }
+
+// Nasłuchuj zmian w URL, aby dodać przycisk "Summarize" po przejściu na stronę filmu
+let lastUrl = location.href; 
+new MutationObserver(() => {
+    const url = location.href;
+    if (url !== lastUrl) {
+        lastUrl = url;
+        checkAndAddSummarizeButton();
+    }
+}).observe(document, {subtree: true, childList: true});
