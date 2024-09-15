@@ -124,13 +124,41 @@ function addSummarizeButtonToVideoPage() {
 // Funkcja do sprawdzania, czy jesteśmy na stronie filmu i dodawania przycisku "Summarize"
 function checkAndAddSummarizeButton() {
     if (window.location.pathname === '/watch') {
-        // Użyj MutationObserver, aby poczekać na załadowanie przycisku akcji
-        const observer = new MutationObserver((mutations, obs) => {
+        let attempts = 0;
+        const maxAttempts = 10;
+        const interval = 500; // 500ms
+
+        function tryAddButton() {
             const actionsContainer = document.querySelector('#top-level-buttons-computed');
             if (actionsContainer) {
                 addSummarizeButtonToVideoPage();
-                obs.disconnect(); // Przestań obserwować po dodaniu przycisku
+            } else if (attempts < maxAttempts) {
+                attempts++;
+                setTimeout(tryAddButton, interval);
+            } else {
+                console.error('Failed to add Summarize button after', maxAttempts, 'attempts');
             }
+        }
+
+        tryAddButton();
+
+        // Użyj MutationObserver, aby śledzić zmiany w DOM
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'childList') {
+                    const addedNodes = mutation.addedNodes;
+                    for (let node of addedNodes) {
+                        if (node.nodeType === Node.ELEMENT_NODE) {
+                            const actionsContainer = node.querySelector('#top-level-buttons-computed');
+                            if (actionsContainer) {
+                                addSummarizeButtonToVideoPage();
+                                observer.disconnect();
+                                return;
+                            }
+                        }
+                    }
+                }
+            });
         });
 
         observer.observe(document.body, {
