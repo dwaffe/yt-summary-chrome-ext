@@ -140,11 +140,48 @@ function checkAndAddSummarizeButton() {
     }
 }
 
+// Nowa funkcja do dodawania przycisku "Summaries" na każdej stronie YouTube
+function addSummariesButton() {
+    if (document.querySelector('#summaries-button')) return; // Jeśli przycisk już istnieje, nie dodawaj kolejnego
+
+    const ytdAppContainer = document.querySelector('ytd-app');
+    if (ytdAppContainer) {
+        const summariesButton = document.createElement('button');
+        summariesButton.id = 'summaries-button';
+        summariesButton.className = 'yt-spec-button-shape-next yt-spec-button-shape-next--tonal yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m';
+        summariesButton.style.cssText = `
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            z-index: 2000;
+            padding: 8px 16px;
+            background-color: #065fd4;
+            color: white;
+            border: none;
+            border-radius: 2px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        `;
+        summariesButton.textContent = 'Summaries';
+
+        summariesButton.addEventListener('click', function() {
+            chrome.runtime.sendMessage({action: "openSummariesPage"});
+        });
+
+        ytdAppContainer.appendChild(summariesButton);
+        console.log('Summaries button added successfully');
+    } else {
+        console.error('YouTube app container not found');
+    }
+}
+
 // Inicjalizacja
 function init() {
     addButtonsToExistingThumbnails();
     observeDOMChanges();
     checkAndAddSummarizeButton();
+    addSummariesButton(); // Dodaj nowy przycisk "Summaries"
 }
 
 // Uruchom inicjalizację po załadowaniu strony
@@ -161,5 +198,6 @@ new MutationObserver(() => {
     if (url !== lastUrl) {
         lastUrl = url;
         checkAndAddSummarizeButton();
+        addSummariesButton(); // Dodaj przycisk "Summaries" przy każdej zmianie strony
     }
 }).observe(document, {subtree: true, childList: true});

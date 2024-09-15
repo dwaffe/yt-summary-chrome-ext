@@ -1,38 +1,45 @@
 {
-    "manifest_version": 3,
-    "name": "YouTube Summary Extension",
-    "version": "1.0",
-    "description": "Get AI-generated summaries of EVERY YouTube video.",
-    "permissions": [
-      "storage",
-      "activeTab"
-    ],
-    "host_permissions": [
-      "https://www.youtube.com/*",
-      "https://api.anthropic.com/*"
-    ],
-    "background": {
-      "service_worker": "background.js"
-    },
-    "content_scripts": [
-      {
-        "matches": ["https://www.youtube.com/*"],
-        "js": ["content.js"],
-        "css": ["styles.css"]
-      }
-    ],
-    "action": {
-      "default_popup": "popup.html",
-      "default_icon": {
-        "16": "icon16.png",
-        "48": "icon48.png",
-        "128": "icon128.png"
-      }
-    },
-    "icons": {
+  "manifest_version": 3,
+  "name": "YouTube Summary Extension",
+  "version": "1.0",
+  "description": "Get AI-generated summaries of EVERY YouTube video.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://openrouter.ai/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
       "16": "icon16.png",
       "48": "icon48.png",
       "128": "icon128.png"
-    },
-    "options_page": "options.html"
-  }
+    }
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "options_page": "options.html",
+  "web_accessible_resources": [
+    {
+      "resources": ["summaries.html"],
+      "matches": ["https://www.youtube.com/*"]
+    }
+  ]
+}

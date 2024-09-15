@@ -41,6 +41,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             }
         });
         return true; // Informs Chrome that the response will be sent asynchronously
+    } else if (request.action === "openSummariesPage") {
+        chrome.tabs.create({ url: chrome.runtime.getURL("summaries.html") });
+        sendResponse({success: true});
+        return false; // No asynchronous response needed
     }
 });
 
