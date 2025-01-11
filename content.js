@@ -7,7 +7,7 @@ function addButtonToThumbnail(thumbnail) {
     button.className = 'summary-btn';
     button.style.cssText = `
         position: absolute;
-        top: 5px;
+        top: 128px;
         right: 5px;
         background-color: rgba(0, 0, 0, 0.7);
         color: white;
@@ -179,7 +179,6 @@ function addSummariesButton() {
         summariesButton.className = 'yt-spec-button-shape-next yt-spec-button-shape-next--tonal yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m';
         summariesButton.style.cssText = `
             position: fixed;
-            top: 60px;
             right: 20px;
             z-index: 2000;
             padding: 8px 16px;
